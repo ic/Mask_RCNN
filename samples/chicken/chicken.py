@@ -115,7 +115,7 @@ class ChickenDataset(utils.Dataset):
             if type(a['regions']) is dict:
                 polygons = [r['shape_attributes'] for r in a['regions'].values()]
             else:
-                polygons = [r['shape_attributes'] for r in a['regions']] 
+                polygons = [r['shape_attributes'] for r in a['regions']]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
@@ -309,7 +309,7 @@ if __name__ == '__main__':
     if args.command == "train":
         config = ChickenConfig()
     else:
-        class InferenceConfig(ChichenConfig):
+        class InferenceConfig(ChickenConfig):
             # Set batch size to 1 since we'll be running inference on
             # one image at a time. Batch size = GPU_COUNT * IMAGES_PER_GPU
             GPU_COUNT = 1
