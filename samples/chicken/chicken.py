@@ -27,6 +27,8 @@ import datetime
 import numpy as np
 import skimage.draw
 
+from mrcnn import visualize
+
 # Root directory of the project
 ROOT_DIR = os.path.abspath("../../")
 
@@ -220,11 +222,17 @@ def detect_and_color_splash(model, image_path=None, video_path=None):
         image = skimage.io.imread(args.image)
         # Detect objects
         r = model.detect([image], verbose=1)[0]
+        class_names = ['bg', 'chicken']
+        res_img = visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
+                                    class_names, r['scores'],
+                                    title="Predictions")
         # Color splash
-        splash = color_splash(image, r['masks'])
+        #splash = color_splash(image, r['masks'])
         # Save output
-        file_name = "result_{:%Y%m%dT%H%M%S}.png".format(datetime.datetime.now())
-        skimage.io.imsave(file_name, splash)
+        fname, _ = os.path.splitext(args.image)
+        file_name = "{}_out.png".format(fname)
+        #skimage.io.imsave(file_name, image)
+        res_img.savefig(file_name)
     elif video_path:
         import cv2
         # Video capture
