@@ -27,9 +27,10 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'output')
 #  Configuration
 ############################################################
 
-class XfinderConfig(Config):
+class ViaConfig(Config):
 
     def __init__(self, name):
+        super(ViaConfig, self).__init__()
         # mrcnn requires a configuration name.
         self.NAME = name
 
@@ -48,6 +49,7 @@ class XfinderConfig(Config):
 class ViaDataset(utils.Dataset):
 
     def __init__(self, category):
+        super(ViaDataset, self).__init__()
         self.category = category
 
     def load_via(self, manifest, dataset_dir, subset):
@@ -77,12 +79,13 @@ class ViaDataset(utils.Dataset):
         # }
         # We mostly care about the x and y coordinates of each region
         # Note: In VIA 2.0, regions was changed from a dict to a list.
-        annotations = json.load(open(os.path.join(dataset_dir, manifest)))
+        annotations = json.load(open(manifest))
+        annotations = annotations['_via_img_metadata']
         annotations = list(annotations.values())  # don't need the dict keys
 
         # The VIA tool saves images in the JSON even if they don't have any
         # annotations. Skip unannotated images.
-        annotations = [a for a in annotations if a['regions']]
+        annotations = [a for a in annotations if 'regions' in a]
 
         # Add images
         for a in annotations:
@@ -102,6 +105,7 @@ class ViaDataset(utils.Dataset):
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
 
+            print('Adding %s' % a['filename'])
             self.add_image(
                 self.category,
                 image_id=a['filename'],  # use file name as a unique image id
@@ -144,16 +148,14 @@ class ViaDataset(utils.Dataset):
             super(self.__class__, self).image_reference(image_id)
 
 
-def train(model, target, manifest, dataset):
-    """Train the model."""
-    # Training dataset.
+def train(model, target, training_manifest, validation_manifest, dataset):
+
     dataset_train = ViaDataset(target)
-    dataset_train.load_via(manifest, dataset, 'train')
+    dataset_train.load_via(training_manifest, dataset, 'train')
     dataset_train.prepare()
 
-    # Validation dataset
     dataset_val = ViaDataset(target)
-    dataset_val.load_via(manifest, dataset, 'val')
+    dataset_val.load_via(validation_manifest, dataset, 'val')
     dataset_val.prepare()
 
     print('Training network heads only (enough for many tasks, and faster)')
@@ -220,9 +222,12 @@ if __name__ == '__main__':
                         metavar='<weights>',
                         choices=['coco', 'last'],
                         help="Select 'coco' to start from scratch or 'last'.")
-    parser.add_argument('--manifest', required=False,
+    parser.add_argument('--training_manifest', required=False,
                         metavar='/path/to/manifest.json',
-                        help='Manifest for the dataset in VIA format.')
+                        help='Manifest for the training dataset in VIA format.')
+    parser.add_argument('--validation_manifest', required=False,
+                        metavar='/path/to/manifest.json',
+                        help='Manifest for the validation dataset in VIA format.')
     parser.add_argument('--dataset', required=False,
                         metavar='/path/to/dataset',
                         help='Directory of the dataset.')
@@ -239,7 +244,8 @@ if __name__ == '__main__':
 
     print('Weights: ', args.weights)
     print('Dataset: ', args.dataset)
-    print('Manifest: ', args.manifest)
+    print('Training Manifest: ', args.training_manifest)
+    print('Validation Manifest: ', args.validation_manifest)
     print('Results: ', OUTPUT_DIR)
 
     # Configuration
@@ -284,6 +290,6 @@ if __name__ == '__main__':
 
     # Run mode
     if args.command == 'train':
-        train(model, args.target, args.manifest, args.dataset)
+        train(model, args.target, args.training_manifest, args.validation_manifest, args.dataset)
     elif args.command == 'infer':
         apply_to(model, args.target, args.image)
