@@ -52,16 +52,11 @@ class ViaDataset(utils.Dataset):
         super(ViaDataset, self).__init__()
         self.category = category
 
-    def load_via(self, manifest, dataset_dir, subset):
+    def load_via(self, manifest, dataset_dir):
         """
         dataset_dir: Root directory of the dataset.
-        subset: Subset to load: train or val
         """
         self.add_class(self.category, 1, self.category)
-
-        # Train or validation dataset?
-        assert subset in ['train', 'val']
-        dataset_dir = os.path.join(dataset_dir, subset)
 
         # Load annotations
         # VGG Image Annotator (up to version 1.6) saves each image in the form:
@@ -105,7 +100,6 @@ class ViaDataset(utils.Dataset):
             image = skimage.io.imread(image_path)
             height, width = image.shape[:2]
 
-            print('Adding %s' % a['filename'])
             self.add_image(
                 self.category,
                 image_id=a['filename'],  # use file name as a unique image id
@@ -151,11 +145,11 @@ class ViaDataset(utils.Dataset):
 def train(model, target, training_manifest, validation_manifest, dataset):
 
     dataset_train = ViaDataset(target)
-    dataset_train.load_via(training_manifest, dataset, 'train')
+    dataset_train.load_via(training_manifest, dataset)
     dataset_train.prepare()
 
     dataset_val = ViaDataset(target)
-    dataset_val.load_via(validation_manifest, dataset, 'val')
+    dataset_val.load_via(validation_manifest, dataset)
     dataset_val.prepare()
 
     print('Training network heads only (enough for many tasks, and faster)')
