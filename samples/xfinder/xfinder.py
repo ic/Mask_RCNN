@@ -2,14 +2,17 @@
 Based on: Matterport's implementation of Mask-RCNN sample code.
 """
 
-import os
-import sys
-import json
+import colorsys
 import datetime
-import numpy as np
-import skimage.draw
+import json
+import os
+import random
+import sys
 
-from mrcnn import visualize
+import numpy as np
+from PIL import Image, ImageDraw
+import skimage.draw
+from skimage.measure import find_contours
 
 ROOT_DIR = os.path.abspath('../../')
 
@@ -179,21 +182,98 @@ def color_splash(image, mask):
     return splash
 
 
+def random_colors(N, bright=True):
+    """
+    Generate random colors.
+    To get visually distinct colors, generate them in HSV space then
+    convert to RGB.
+    """
+    brightness = 1.0 if bright else 0.7
+    hsv = [(i / N, 1, brightness) for i in range(N)]
+    colors = list(map(lambda c: colorsys.hsv_to_rgb(*c), hsv))
+    random.shuffle(colors)
+    return colors
+
+
+def apply_mask(image, mask, color, alpha=0.5):
+    image = np.asarray(image).copy()
+    for c in range(3):
+        image[:, :, c] = np.where(mask == 1,
+                                  image[:, :, c] *
+                                  (1 - alpha) + alpha * color[c] * 255,
+                                  image[:, :, c])
+    return Image.fromarray(image)
+
+
+def overlay(image, boxes, masks, class_ids, class_names,
+            scores=None, title="",
+            figsize=(16, 16), ax=None,
+            show_mask=True, show_bbox=True,
+            colors=None, captions=None):
+    height, width = image.shape[:2]
+
+    # Object count
+    N = boxes.shape[0]
+    assert boxes.shape[0] == masks.shape[-1] == class_ids.shape[0]
+
+    # Generate random colors
+    colors = colors or random_colors(N)
+
+    masked_image = Image.fromarray(image)
+    for i in range(N):
+        color = colors[i]
+
+        # Bounding box
+        if not np.any(boxes[i]):
+            continue
+        y1, x1, y2, x2 = boxes[i]
+
+        # Mask
+        mask = masks[:, :, i]
+        if show_mask:
+            masked_image = apply_mask(masked_image, mask, color)
+
+        # Mask Polygon
+        # Pad to ensure proper polygons for masks that touch image edges.
+        padded_mask = np.zeros(
+            (mask.shape[0] + 2, mask.shape[1] + 2), dtype=np.uint8)
+        padded_mask[1:-1, 1:-1] = mask
+        contours = find_contours(padded_mask, 0.5)
+
+        draw = ImageDraw.Draw(masked_image)
+        for verts in contours:
+            # Subtract the padding and flip (y, x) to (x, y)
+            verts = np.fliplr(verts) - 1
+            draw.polygon(verts)
+
+        # Label
+        if not captions:
+            class_id = class_ids[i]
+            score = scores[i] if scores is not None else None
+            label = class_names[class_id]
+            x = random.randint(x1, (x1 + x2) // 2)
+            caption = "{} {:.3f}".format(label, score) if score else label
+        else:
+            caption = captions[i]
+        draw.text((x1, y1 + 8), caption)
+    return masked_image
+
+
 def apply_to(model, target, image_path):
     print('Running on {}'.format(image_path))
 
     image = skimage.io.imread(image_path)
     r = model.detect([image], verbose=1)[0]
     class_names = ['bg', target]
-    res_img = visualize.display_instances(image, r['rois'], r['masks'], r['class_ids'],
-                                class_names, r['scores'],
-                                title='Predictions')
+    res_img = overlay(image,
+                      r['rois'], r['masks'], r['class_ids'],
+                      class_names, r['scores'])
 
     fname, _ = os.path.splitext(image_path)
-    file_name = '{}_out.png'.format(fname)
-    res_img.savefig(file_name)
+    fname = '{}_out.png'.format(fname)
+    res_img.save(fname)
 
-    print('Saved to: ', file_name)
+    print('Saved to: ', fname)
 
 
 ############################################################
@@ -214,8 +294,7 @@ if __name__ == '__main__':
                         help='The target object we want to train on (e.g. balloons, cats, dogs, elephant).')
     parser.add_argument('weights',
                         metavar='<weights>',
-                        choices=['coco', 'last'],
-                        help="Select 'coco' to start from scratch or 'last'.")
+                        help="Please provide a path, or 'coco' to start from scratch or 'last'.")
     parser.add_argument('--training_manifest', required=False,
                         metavar='/path/to/manifest.json',
                         help='Manifest for the training dataset in VIA format.')
