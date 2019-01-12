@@ -1,0 +1,6 @@
+data/
+output/
+*.json
+*.tgz
+*.mp4
+*.jpe?g
