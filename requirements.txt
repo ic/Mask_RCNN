@@ -5,8 +5,8 @@ cython
 matplotlib
 scikit-image
 tensorflow>=1.3.0; sys_platform == 'darwin'
-tensorflow-gpu>=1.3.0; sys_platform == 'linux'
-tensorflow-gpu>=1.3.0; sys_platform == 'linux2'
+#tensorflow-gpu>=1.3.0; sys_platform == 'linux'
+#tensorflow-gpu>=1.3.0; sys_platform == 'linux2'
 keras>=2.0.8
 opencv-python
 h5py
