@@ -97,6 +97,10 @@ class ViaDataset(utils.Dataset):
                 shape_attributes = a['regions']
             polygons = [r['shape_attributes'] for r in shape_attributes if 'shape_attributes' in r]
 
+            # Ignore images that only contain background.
+            if len(polygons) == 0:
+                continue
+
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
             # the image. This is only managable since the dataset is tiny.
