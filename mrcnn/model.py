@@ -1069,7 +1069,7 @@ def rpn_bbox_loss_graph(config, target_bbox, rpn_match, rpn_bbox):
                                    config.IMAGES_PER_GPU)
 
     loss = smooth_l1_loss(target_bbox, rpn_bbox)
-    
+
     loss = K.switch(tf.size(loss) > 0, K.mean(loss), tf.constant(0.0))
     return loss
 
@@ -1808,7 +1808,8 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
                 b = 0
         except (GeneratorExit, KeyboardInterrupt):
             raise
-        except:
+        except Exception as e:
+            logging.exception(e)
             # Log it and skip the image
             logging.exception("Error processing image {}".format(
                 dataset.image_info[image_id]))
