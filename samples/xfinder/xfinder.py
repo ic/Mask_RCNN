@@ -92,9 +92,10 @@ class ViaDataset(utils.Dataset):
             # shape_attributes (see json format above)
             # The if condition is needed to support VIA versions 1.x and 2.x.
             if type(a['regions']) is dict:
-                polygons = [r['shape_attributes'] for r in a['regions'].values()]
+                shape_attributes = a['regions'].values()
             else:
-                polygons = [r['shape_attributes'] for r in a['regions']]
+                shape_attributes = a['regions']
+            polygons = [r['shape_attributes'] for r in shape_attributes if 'shape_attributes' in r]
 
             # load_mask() needs the image size to convert polygons to masks.
             # Unfortunately, VIA doesn't include it in JSON, so we must read
