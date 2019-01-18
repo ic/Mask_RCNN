@@ -1672,10 +1672,13 @@ def data_generator(dataset, config, shuffle=True, augment=False, augmentation=No
         and masks.
     """
     b = 0  # batch item index
-    image_index = -1
-    image_ids = np.copy(dataset.image_ids)
     error_count = 0
     no_augmentation_sources = no_augmentation_sources or []
+    image_index = -1
+    image_ids = np.copy(dataset.image_ids)
+    if len(image_ids) == 0:
+        logging.warning("No image to work on. Exiting.")
+        return
 
     # Anchors
     # [anchor_count, (y1, x1, y2, x2)]

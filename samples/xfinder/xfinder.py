@@ -161,10 +161,14 @@ def train(model, target, training_manifest, validation_manifest, dataset):
     dataset_val.prepare()
 
     print('Training network heads only (enough for many tasks, and faster)')
-    model.train(dataset_train, dataset_val,
-                learning_rate=config.LEARNING_RATE,
-                epochs=30,
-                layers='heads')
+    try:
+        model.train(dataset_train, dataset_val,
+                    learning_rate=config.LEARNING_RATE,
+                    epochs=30,
+                    layers='heads')
+    except StopIteration:
+        print('Training over')
+        pass
 
 
 def color_splash(image, mask):
