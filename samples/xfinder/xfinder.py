@@ -41,7 +41,7 @@ class ViaConfig(Config):
 
     NUM_CLASSES = 1 + 1  # Background + item to find
 
-    STEPS_PER_EPOCH = 100
+    STEPS_PER_EPOCH = 20
     DETECTION_MIN_CONFIDENCE = 0.9
 
 
@@ -268,7 +268,7 @@ def overlay(image, boxes, masks, class_ids, class_names,
     return masked_image
 
 
-def apply_to(model, target, image_path):
+def apply_to(model, target, image_path, out_path=None):
     print('Running on {}'.format(image_path))
 
     image = skimage.io.imread(image_path)
@@ -278,9 +278,18 @@ def apply_to(model, target, image_path):
                       r['rois'], r['masks'], r['class_ids'],
                       class_names, r['scores'])
 
-    fname, _ = os.path.splitext(image_path)
-    fname = '{}_out.png'.format(fname)
+    if out_path is None:
+        fname, _ = os.path.splitext(image_path)
+        fname = '{}_out.png'.format(fname)
+    else:
+        fname = out_path
     res_img.save(fname)
+
+    for idx in range(r['masks'].shape[-1]):
+        mask = r['masks'][...,idx]
+        if r['scores'][idx] > 0.9:
+            m = Image.fromarray(mask)
+        m.save(f'{fname}_mask_{idx}.jpg')
 
     print('Saved to: ', fname)
 
@@ -316,6 +325,9 @@ if __name__ == '__main__':
     parser.add_argument('--image', required=False,
                         metavar='path',
                         help='Path or URL to image to infer on.')
+    parser.add_argument('--outdir', required=False,
+                        metavar='path',
+                        help='Directory where to save the output to.')
     args = parser.parse_args()
 
     # Validate arguments
@@ -374,4 +386,4 @@ if __name__ == '__main__':
     if args.command == 'train':
         train(model, args.target, args.training_manifest, args.validation_manifest, args.dataset)
     elif args.command == 'infer':
-        apply_to(model, args.target, args.image)
+        apply_to(model, args.target, args.image, args.outdir)
