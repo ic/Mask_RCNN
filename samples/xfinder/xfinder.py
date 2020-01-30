@@ -290,6 +290,7 @@ def apply_to(model, target, image_path, out_path=None, masksonly=False, manifest
         manf = None
         if manifest:
             manf = open(manifest, 'w')
+        original_fname = os.path.basename(image_path)
         for idx in range(r['masks'].shape[-1]):
             mask = r['masks'][...,idx]
             if r['scores'][idx] > 0.9:
@@ -297,7 +298,7 @@ def apply_to(model, target, image_path, out_path=None, masksonly=False, manifest
             mname = f'{ofname}_mask_{idx}.jpg'
             m.save(mname)
             if manf:
-                manf.write(','.join([ofname, mname]))
+                manf.write(','.join([original_fname, os.path.basename(mname) + '\n']))
     finally:
         if manifest:
             manf.close()
