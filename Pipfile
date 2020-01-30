@@ -1,0 +1,23 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[dev-packages]
+
+[packages]
+numpy = "*"
+scipy = "*"
+matplotlib = "*"
+scikit-image = "*"
+tensorflow = "<2.0"
+opencv-python = "*"
+h5py = "*"
+imgaug = "*"
+ipython = {extras = ["all"],version = "*"}
+Pillow = "*"
+Cython = "*"
+Keras = "==2.0.8"
+
+[requires]
+python_version = "3.7"
