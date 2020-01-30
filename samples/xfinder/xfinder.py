@@ -278,11 +278,10 @@ def apply_to(model, target, image_path, out_path=None):
                       r['rois'], r['masks'], r['class_ids'],
                       class_names, r['scores'])
 
-    if out_path is None:
-        fname, _ = os.path.splitext(image_path)
-        fname = '{}_out.png'.format(fname)
-    else:
-        fname = out_path
+    fname, _ = os.path.splitext(image_path)
+    fname = '{}_out.png'.format(fname)
+    if out_path:
+        fname = os.path.join(out_path, os.path.basename(fname))
     res_img.save(fname)
 
     for idx in range(r['masks'].shape[-1]):
