@@ -268,7 +268,7 @@ def overlay(image, boxes, masks, class_ids, class_names,
     return masked_image
 
 
-def apply_to(model, target, image_path, out_path=None):
+def apply_to(model, target, image_path, out_path=None, masksonly=False):
     print('Running on {}'.format(image_path))
 
     image = skimage.io.imread(image_path)
@@ -278,19 +278,19 @@ def apply_to(model, target, image_path, out_path=None):
                       r['rois'], r['masks'], r['class_ids'],
                       class_names, r['scores'])
 
-    fname, _ = os.path.splitext(image_path)
-    fname = '{}_out.png'.format(fname)
+    ofname, _ = os.path.splitext(image_path)
+    fname = '{}_out.png'.format(ofname)
     if out_path:
         fname = os.path.join(out_path, os.path.basename(fname))
-    res_img.save(fname)
+    if not masksonly:
+        res_img.save(fname)
+        print('Saved to: ', fname)
 
     for idx in range(r['masks'].shape[-1]):
         mask = r['masks'][...,idx]
         if r['scores'][idx] > 0.9:
             m = Image.fromarray(mask)
-        m.save(f'{fname}_mask_{idx}.jpg')
-
-    print('Saved to: ', fname)
+        m.save(f'{ofname}_mask_{idx}.jpg')
 
 
 ############################################################
@@ -324,9 +324,12 @@ if __name__ == '__main__':
     parser.add_argument('--image', required=False,
                         metavar='path',
                         help='Path or URL to image to infer on.')
-    parser.add_argument('--outdir', required=False,
+    parser.add_argument('--outdir', '-o', required=False,
                         metavar='path',
                         help='Directory where to save the output to.')
+    parser.add_argument('--masksonly', required=False,
+                        action='store_true',
+                        help='Output only the masks.')
     args = parser.parse_args()
 
     # Validate arguments
@@ -385,4 +388,4 @@ if __name__ == '__main__':
     if args.command == 'train':
         train(model, args.target, args.training_manifest, args.validation_manifest, args.dataset)
     elif args.command == 'infer':
-        apply_to(model, args.target, args.image, args.outdir)
+        apply_to(model, args.target, args.image, args.outdir, args.masksonly)
