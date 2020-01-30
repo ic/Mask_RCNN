@@ -289,7 +289,7 @@ def apply_to(model, target, image_path, out_path=None, masksonly=False, manifest
     try:
         manf = None
         if manifest:
-            manf = open(manifest, 'w')
+            manf = open(manifest, 'a')
         original_fname = os.path.basename(image_path)
         for idx in range(r['masks'].shape[-1]):
             mask = r['masks'][...,idx]
