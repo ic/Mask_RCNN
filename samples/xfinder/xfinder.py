@@ -268,7 +268,7 @@ def overlay(image, boxes, masks, class_ids, class_names,
     return masked_image
 
 
-def apply_to(model, target, image_path, out_path=None, masksonly=False):
+def apply_to(model, target, image_path, out_path=None, masksonly=False, manifest=None):
     print('Running on {}'.format(image_path))
 
     image = skimage.io.imread(image_path)
@@ -286,11 +286,21 @@ def apply_to(model, target, image_path, out_path=None, masksonly=False):
         res_img.save(fname)
         print('Saved to: ', fname)
 
-    for idx in range(r['masks'].shape[-1]):
-        mask = r['masks'][...,idx]
-        if r['scores'][idx] > 0.9:
-            m = Image.fromarray(mask)
-        m.save(f'{ofname}_mask_{idx}.jpg')
+    try:
+        manf = None
+        if manifest:
+            manf = open(manifest, 'w')
+        for idx in range(r['masks'].shape[-1]):
+            mask = r['masks'][...,idx]
+            if r['scores'][idx] > 0.9:
+                m = Image.fromarray(mask)
+            mname = f'{ofname}_mask_{idx}.jpg'
+            m.save(mname)
+            if manf:
+                manf.write(','.join([ofname, mname]))
+    finally:
+        if manifest:
+            manf.close()
 
 
 ############################################################
@@ -330,6 +340,9 @@ if __name__ == '__main__':
     parser.add_argument('--masksonly', required=False,
                         action='store_true',
                         help='Output only the masks.')
+    parser.add_argument('--manifest', required=False,
+                        metavar='path',
+                        help='Path to a CSV manifest file to report to.')
     args = parser.parse_args()
 
     # Validate arguments
@@ -388,4 +401,4 @@ if __name__ == '__main__':
     if args.command == 'train':
         train(model, args.target, args.training_manifest, args.validation_manifest, args.dataset)
     elif args.command == 'infer':
-        apply_to(model, args.target, args.image, args.outdir, args.masksonly)
+        apply_to(model, args.target, args.image, args.outdir, args.masksonly, args.manifest)
