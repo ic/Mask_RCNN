@@ -31,7 +31,7 @@ class Dataset(utils.Dataset):
         super(Dataset, self).__init__()
         self.category = category
 
-    def load_via(self, manifest, dataset_dir):
+    def load(self, manifest, dataset_dir):
         """
         dataset_dir: Root directory of the dataset.
         """

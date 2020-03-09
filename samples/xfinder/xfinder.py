@@ -31,11 +31,11 @@ OUTPUT_DIR = os.path.join(os.path.dirname(__file__), 'output')
 def train(model, target, training_manifest, validation_manifest, dataset):
 
     dataset_train = Dataset(target)
-    dataset_train.load_via(training_manifest, dataset)
+    dataset_train.load(training_manifest, dataset)
     dataset_train.prepare()
 
     dataset_val = Dataset(target)
-    dataset_val.load_via(validation_manifest, dataset)
+    dataset_val.load(validation_manifest, dataset)
     dataset_val.prepare()
 
     print('Training network heads only (enough for many tasks, and faster)')
