@@ -44,7 +44,7 @@ class Dataset(utils.Dataset):
             self.add_image(
                 self.category,
                 image_id=d['name'], # use file name as a unique image id
-                path=os.path.join(dataset_dir, d['filename']),
+                path=os.path.join(dataset_dir, d['name']),
                 width=d['width'],
                 height=d['height'],
                 polygons=d['annotations'])
