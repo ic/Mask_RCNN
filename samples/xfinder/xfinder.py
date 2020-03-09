@@ -20,7 +20,7 @@ sys.path.append(ROOT_DIR)  # To find local version of the library
 from mrcnn.config import Config
 from mrcnn import model as modellib, utils
 
-from loaders.via import Config, Dataset
+from loaders.image_tagger import Config, Dataset
 
 # Path to base weight file (COCO)
 COCO_WEIGHTS_PATH = os.path.join(ROOT_DIR, 'mrcnn_coco.h5')
