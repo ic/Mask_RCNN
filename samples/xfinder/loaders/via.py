@@ -4,6 +4,7 @@ import sys
 
 import numpy as np
 import skimage.draw
+import skimage.io
 
 ROOT_DIR = os.path.abspath('../../../')
 sys.path.append(ROOT_DIR)  # To find local version of the library
