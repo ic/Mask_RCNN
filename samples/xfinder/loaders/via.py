@@ -28,7 +28,7 @@ class Config(Config):
 class Dataset(utils.Dataset):
 
     def __init__(self, category):
-        super(ViaDataset, self).__init__()
+        super(Dataset, self).__init__()
         self.category = category
 
     def load_via(self, manifest, dataset_dir):
